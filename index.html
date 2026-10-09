@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="format-detection" content="telephone=no">
+    <meta name="HandheldFriendly" content="true" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Learning Adventure">
+    <meta name="theme-color" content="#4FA3F7">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Learning Adventure</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%AD%90%3C/text%3E%3C/svg%3E">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #6fb8f7;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+        }
+
+        #game-container {
+            position: fixed;
+            inset: 0;
+        }
+
+        #game-container canvas {
+            display: block;
+            outline: none;
+        }
+
+        /* Boot screen: shown until the first menu is drawn, then faded out. */
+        #boot {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            background: radial-gradient(ellipse at 50% 35%, #8fd0ff 0%, #4fa3f7 60%, #2f7fe0 100%);
+            font-family: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+            transition: opacity .35s ease;
+        }
+
+        #boot.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #boot .title {
+            font-weight: 700;
+            font-size: clamp(30px, 6vw, 64px);
+            letter-spacing: 1px;
+            color: #fff;
+            text-shadow: 0 4px 0 #1f5fc4, 0 8px 18px rgba(0, 0, 0, .25);
+            animation: float 2.4s ease-in-out infinite;
+        }
+
+        #boot .title span:nth-child(6n+1) { color: #ff4b4b; }
+        #boot .title span:nth-child(6n+2) { color: #ffa21f; }
+        #boot .title span:nth-child(6n+3) { color: #ffd84a; }
+        #boot .title span:nth-child(6n+4) { color: #4ccf5c; }
+        #boot .title span:nth-child(6n+5) { color: #fff; }
+        #boot .title span:nth-child(6n+6) { color: #c27bff; }
+
+        @keyframes float {
+            50% { transform: translateY(-8px); }
+        }
+
+        #boot .bar {
+            width: min(60vw, 360px);
+            height: 26px;
+            border-radius: 13px;
+            background: #fff;
+            padding: 4px;
+            box-sizing: border-box;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, .12);
+        }
+
+        #boot .bar i {
+            display: block;
+            height: 100%;
+            width: 4%;
+            border-radius: 9px;
+            background: linear-gradient(#7be86f, #22b13a);
+            transition: width .15s linear;
+        }
+
+        #boot .tip {
+            font-weight: 600;
+            font-size: 16px;
+            color: rgba(255, 255, 255, .92);
+        }
+        /* The game is landscape, like every mockup: ask portrait phones and
+           tablets to turn sideways. */
+        #rotate {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            background: radial-gradient(ellipse at 50% 35%, #8fd0ff 0%, #4fa3f7 60%, #2f7fe0 100%);
+            font-family: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+            font-weight: 700;
+            font-size: 24px;
+            color: #fff;
+            text-align: center;
+            padding: 24px;
+            text-shadow: 0 3px 0 #1f5fc4;
+        }
+
+        #rotate .phone {
+            width: 70px;
+            height: 112px;
+            border: 8px solid #fff;
+            border-radius: 18px;
+            animation: turn 1.8s ease-in-out infinite;
+        }
+
+        @keyframes turn {
+            0%, 20% { transform: rotate(0deg); }
+            50%, 80% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @media (orientation: portrait) and (max-width: 1024px) {
+            #rotate { display: flex; }
+        }
+    </style>
+  <script type="module" crossorigin src="./assets/index-CS6bS7P3.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/phaser-DfOHZil_.js">
+</head>
+
+<body>
+    <div id="game-container"></div>
+    <div id="rotate"><div class="phone"></div>Turn your device sideways to play!</div>
+    <div id="boot">
+        <div class="title" aria-label="Learning Adventure"><span>L</span><span>e</span><span>a</span><span>r</span><span>n</span><span>i</span><span>n</span><span>g</span>&nbsp;<span>A</span><span>d</span><span>v</span><span>e</span><span>n</span><span>t</span><span>u</span><span>r</span><span>e</span></div>
+        <div class="bar"><i id="boot-fill"></i></div>
+        <div class="tip">Loading&hellip;</div>
+    </div>
+    <script>
+        // The Preloader scene reports real progress here; the Game scene hides
+        // the boot screen once the first screen is on show.
+        window.bootProgress = function (p) {
+            var el = document.getElementById('boot-fill');
+            if (el) el.style.width = Math.max(4, Math.min(100, p * 100)) + '%';
+        };
+        window.bootDone = function () {
+            var el = document.getElementById('boot');
+            if (!el) return;
+            el.classList.add('hidden');
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+        };
+    </script>
+</body>
+
+</html>
